@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bika Archive — Backend Project Analysis</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222636;
+    --border: #2d3248;
+    --accent: #4f8ef7;
+    --accent2: #7c6af7;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --rose: #f87171;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --tag-bg: #1e2540;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    padding: 2rem 1rem;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; }
+
+  /* ── Header ── */
+  .hero {
+    background: linear-gradient(135deg, #1a1d27 0%, #1e2237 50%, #1a2035 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem 2.5rem 2rem;
+    margin-bottom: 2.5rem;
+  }
+  .hero-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+  .hero h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #e2e8f0 30%, #4f8ef7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.75rem;
+  }
+  .hero p { color: var(--muted); font-size: 1rem; max-width: 680px; }
+
+  /* ── Section headers ── */
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  h2 .badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: var(--tag-bg);
+    color: var(--accent);
+    border: 1px solid var(--border);
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 1.25rem 0 0.6rem;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .stat-card .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat-card .value { font-size: 1.4rem; font-weight: 800; color: var(--text); }
+  .stat-card .sub { font-size: 0.8rem; color: var(--muted); }
+
+  /* ── Section wrapper ── */
+  .section { margin-bottom: 3rem; }
+
+  /* ── Alert / callout ── */
+  .callout {
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    border-left: 3px solid;
+    font-size: 0.9rem;
+  }
+  .callout.warn { background: rgba(251,191,36,0.07); border-color: var(--amber); color: #fde68a; }
+  .callout.info { background: rgba(79,142,247,0.07); border-color: var(--accent); color: #bfdbfe; }
+  .callout.good { background: rgba(52,211,153,0.07); border-color: var(--green); color: #a7f3d0; }
+  .callout.bad { background: rgba(248,113,113,0.07); border-color: var(--rose); color: #fecaca; }
+  .callout strong { font-weight: 700; }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin-bottom: 1rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  thead th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.6rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 0.7rem 1rem; color: var(--text); vertical-align: top; }
+  tbody tr:hover { background: var(--surface2); }
+  td code { font-family: 'Consolas', 'Courier New', monospace; font-size: 0.8rem; background: var(--surface2); padding: 1px 6px; border-radius: 4px; color: #93c5fd; }
+
+  /* ── Tags / pills ── */
+  .tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 99px;
+    margin: 1px 2px;
+  }
+  .tag.blue { background: rgba(79,142,247,0.15); color: #93c5fd; border: 1px solid rgba(79,142,247,0.3); }
+  .tag.green { background: rgba(52,211,153,0.15); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.3); }
+  .tag.amber { background: rgba(251,191,36,0.15); color: #fde68a; border: 1px solid rgba(251,191,36,0.3); }
+  .tag.rose { background: rgba(248,113,113,0.15); color: #fca5a5; border: 1px solid rgba(248,113,113,0.3); }
+  .tag.purple { background: rgba(124,106,247,0.15); color: #c4b5fd; border: 1px solid rgba(124,106,247,0.3); }
+  .tag.slate { background: rgba(100,116,139,0.15); color: #cbd5e1; border: 1px solid rgba(100,116,139,0.3); }
+
+  /* ── Code block ── */
+  pre {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: #e2e8f0;
+    margin: 0.75rem 0;
+  }
+  pre .c { color: #6b7280; }
+  pre .k { color: #93c5fd; }
+  pre .s { color: #86efac; }
+  pre .n { color: #fde68a; }
+
+  /* ── Timeline / roadmap ── */
+  .roadmap { list-style: none; padding: 0; }
+  .roadmap li {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 1.5rem;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .roadmap li:last-child { border-bottom: none; }
+  .sprint-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding-top: 0.15rem;
+  }
+  .sprint-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.35rem; }
+  .sprint-items { font-size: 0.85rem; color: var(--muted); line-height: 1.7; }
+  .sprint-items span { color: var(--text); }
+
+  /* ── Hierarchy ── */
+  .hierarchy {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 2;
+    color: var(--muted);
+  }
+  .hierarchy .root { color: var(--accent); font-weight: 700; }
+  .hierarchy .node { color: var(--text); }
+  .hierarchy .conflict { color: var(--amber); }
+
+  /* ── Compare grid ── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  @media (max-width: 640px) { .compare-grid { grid-template-columns: 1fr; } }
+
+  .compare-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+  }
+  .compare-card .title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.75rem;
+  }
+  .compare-card .title.frontend { color: var(--green); }
+  .compare-card .title.backend { color: var(--accent); }
+  .compare-card ul { list-style: none; padding: 0; }
+  .compare-card ul li {
+    font-size: 0.85rem;
+    color: var(--muted);
+    padding: 0.2rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .compare-card ul li::before { content: '→'; color: var(--border); font-size: 0.75rem; }
+  .compare-card ul li.match { color: var(--text); }
+  .compare-card ul li.match::before { content: '✓'; color: var(--green); }
+  .compare-card ul li.extra::before { content: '+'; color: var(--accent); }
+  .compare-card ul li.conflict::before { content: '!'; color: var(--amber); }
+
+  /* ── Understanding check ── */
+  .understanding-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  .understanding-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+  }
+  .understanding-item .check {
+    font-size: 1rem;
+    margin-bottom: 0.35rem;
+  }
+  .understanding-item .fact {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+  .understanding-item .detail {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  /* ── Decision box ── */
+  .decision {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .decision .q { font-weight: 700; font-size: 0.9rem; color: var(--amber); margin-bottom: 0.35rem; }
+  .decision .a { font-size: 0.85rem; color: var(--muted); }
+  .decision .a strong { color: var(--text); }
+
+  p { margin-bottom: 0.75rem; color: var(--muted); font-size: 0.9rem; }
+  ul.plain { list-style: none; padding: 0; }
+  ul.plain li { font-size: 0.875rem; color: var(--muted); padding: 0.25rem 0; padding-left: 1.1rem; position: relative; }
+  ul.plain li::before { content: '—'; position: absolute; left: 0; color: var(--border); }
+  ul.plain li strong { color: var(--text); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+  .number-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .tech-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ──────────────────── HERO ──────────────────── -->
+  <div class="hero">
+    <div class="hero-label">Project Analysis · Bika Archive</div>
+    <h1>Archive Document Location Management System</h1>
+    <p>Complete analysis of the existing frontend + backend prompt, with a clear implementation roadmap. Read this before writing a single line of backend code.</p>
+  </div>
+
+  <!-- ──────────────────── SECTION 1: WHAT I UNDERSTOOD ──────────────────── -->
+  <div class="section">
+    <h2><span class="number-circle">1</span> What This System Is </h2>
+
+    <div class="callout good">
+      <strong>Core concept:</strong> A physical document location tracking system — like a library catalogue but for warehouses. Users don't store or retrieve files. They look up a document number and the system tells them exactly where to walk inside the warehouse to find the physical paper document.
+    </div>
+
+    <div class="understanding-grid">
+      <div class="understanding-item">
+        <div class="check">📦</div>
+        <div class="fact">No file storage</div>
+        <div class="detail">The system tracks WHERE documents are, not the document content. No PDF uploads, no S3 buckets.</div>
+      </div>
+      <div class="understanding-item">
+        <div class="check">🏭</div>
+        <div class="fact">Physical location hierarchy</div>
+        <div class="detail">Warehouse → Zone/Building → Shelf → Box → Document. The path tells a person where to physically go.</div>
+      </div>
+      <div class="understanding-item">
+        <div class="check">🏢</div>
+        <div class="fact">Multi-tenant (per company)</div>
+        <div class="detail">Multiple companies share one system. Company A cannot see Company B's documents or warehouses. Hard data isolation.</div>
+      </div>
+      <div class="understanding-item">
+        <div class="check">🔐</div>
+        <div class="fact">Three-tier access control</div>
+        <div class="detail">Super Admin (global), Company Admin (per company), User (read + search only). Each role has strict capabilities.</div>
+      </div>
+      <div class="understanding-item">
+        <div class="check">🔍</div>
+        <div class="fact">Primary use case: Search</div>
+        <div class="detail">A standard user types a document number or title and instantly gets its shelf address. That's the core workflow.</div>
+      </div>
+      <div class="understanding-item">
+        <div class="check">📊</div>
+        <div class="fact">Secondary use case: Management</div>
+        <div class="detail">Admins register new documents, set up warehouses, manage shelves, assign documents to locations.</div>
+      </div>
+      <div class="understanding-item">
+        <div class="check">📋</div>
+        <div class="fact">Audit & history</div>
+        <div class="detail">Every search is logged. Every document move is recorded. Admins can see who looked for what and when.</div>
+      </div>
+      <div class="understanding-item">
+        <div class="check">⚡</div>
+        <div class="fact">Performance matters</div>
+        <div class="detail">Millions of documents possible. Document number search must be indexed and fast. Company-level filtering on every query.</div>
+      </div>
+    </div>
+
+    <div class="callout info" style="margin-top:1rem;">
+      <strong>In one sentence:</strong> Bika Archive is a multi-tenant, role-based warehouse catalogue — users search for a document number, the system responds with a physical address inside a warehouse.
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ──────────────────── SECTION 2: FRONTEND SUMMARY ──────────────────── -->
+  <div class="section">
+    <h2><span class="number-circle">2</span> Frontend — What's Already Built</h2>
+
+    <div class="card-grid">
+      <div class="stat-card">
+        <div class="label">Tech Stack</div>
+        <div class="value">React 19</div>
+        <div class="sub">Vite · Tailwind CSS v4 · React Router v7</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pages Built</div>
+        <div class="value">9 pages</div>
+        <div class="sub">Login, Search, Details, Dashboard, Add, Profile, Companies, Warehouses, Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">API Integration</div>
+        <div class="value">0 calls</div>
+        <div class="sub">100% mock data via localStorage — ready to be wired up</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Auth State</div>
+        <div class="value">Mock only</div>
+        <div class="sub">Any email/password works — no JWT yet</div>
+      </div>
+    </div>
+
+    <h3>Pages and their backend needs</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Page</th><th>What it does</th><th>Backend endpoints needed</th></tr></thead>
+        <tbody>
+          <tr><td>LoginPage</td><td>Email + password form</td><td><code>POST /api/auth/login</code> → JWT</td></tr>
+          <tr><td>SearchPage</td><td>Full-text search with filters</td><td><code>GET /api/documents/search?q=&status=</code></td></tr>
+          <tr><td>DetailsPage</td><td>Single document + location path</td><td><code>GET /api/documents/{id}</code></td></tr>
+          <tr><td>DashboardPage</td><td>Stats cards + recent docs</td><td><code>GET /api/dashboard/stats</code></td></tr>
+          <tr><td>AddDocumentPage</td><td>Register a new document</td><td><code>POST /api/documents</code></td></tr>
+          <tr><td>ProfilePage</td><td>Edit name/email + change password</td><td><code>PUT /api/auth/profile</code>, <code>POST /api/auth/change-password</code></td></tr>
+          <tr><td>CompaniesPage</td><td>CRUD for partner companies</td><td><code>/api/companies</code> CRUD</td></tr>
+          <tr><td>WarehousesPage</td><td>Warehouse → Zone → Shelf drill-down</td><td><code>/api/warehouses</code>, <code>/api/zones</code>, <code>/api/shelves</code></td></tr>
+          <tr><td>UsersPage</td><td>CRUD for users + role assignment</td><td><code>/api/users</code> CRUD</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Data models the frontend already defines (The backend must match)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Entity</th><th>Frontend ID format</th><th>Key fields</th></tr></thead>
+        <tbody>
+          <tr><td>Document</td><td><code>DOC-YYYY-NNNN</code></td><td>title, category, custodian, pages, status, archivedDate, location{warehouse,zone,shelf,box}</td></tr>
+          <tr><td>Company</td><td><code>CO-###</code></td><td>name, contact, email, phone, industry</td></tr>
+          <tr><td>Warehouse</td><td><code>WH-###</code></td><td>name, address, city, manager, capacity</td></tr>
+          <tr><td>Zone</td><td><code>ZN-###</code></td><td>warehouseId, name, description</td></tr>
+          <tr><td>Shelf</td><td><code>SH-###</code></td><td>zoneId, warehouseId, name, maxBoxes</td></tr>
+          <tr><td>User</td><td><code>USR-###</code></td><td>name, email, role, status, lastActive</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ──────────────────── SECTION 3: HIERARCHY CONFLICT ──────────────────── -->
+  <div class="section">
+    <h2><span class="number-circle">3</span> Critical Decision — Location Hierarchy</h2>
+
+    <div class="callout warn">
+      <strong>Conflict detected:</strong> The backend prompt defines a deeper hierarchy than what the frontend has already built. You need to decide which to use before writing backend code.
+    </div>
+
+    <div class="compare-grid">
+      <div class="compare-card">
+        <div class="title frontend">Frontend (Already Built)</div>
+        <ul>
+          <li class="match">Company</li>
+          <li class="match">Warehouse</li>
+          <li class="conflict">Zone (= simplified "Area")</li>
+          <li class="match">Shelf</li>
+          <li class="match">Box</li>
+          <li class="match">Document</li>
+        </ul>
+        <p style="margin-top:0.75rem;font-size:0.8rem;color:var(--muted);">4 levels deep. Simple, already implemented in the UI.</p>
+      </div>
+      <div class="compare-card">
+        <div class="title backend">Backend Prompt (Full Hierarchy)</div>
+        <ul>
+          <li class="match">Company</li>
+          <li class="match">Warehouse</li>
+          <li class="extra">Building</li>
+          <li class="extra">Floor</li>
+          <li class="extra">Room</li>
+          <li class="extra">Rack</li>
+          <li class="match">Shelf</li>
+          <li class="match">Box</li>
+          <li class="match">Document</li>
+        </ul>
+        <p style="margin-top:0.75rem;font-size:0.8rem;color:var(--muted);">8 levels deep. More granular for large physical warehouses.</p>
+      </div>
+    </div>
+
+    <div class="decision">
+      <div class="q">Recommendation: Meet in the middle with a configurable hierarchy</div>
+      <div class="a">Design the backend with a generic <strong>LocationNode</strong> table (id, parent_id, type, name, company_id) using a self-referencing tree. This means the hierarchy is fully flexible — the frontend's Zone maps to a node of type ZONE, but you can add Building/Floor/Room in future without schema changes. The frontend only sees the levels it knows about (Warehouse → Zone → Shelf → Box). <strong>This is the cleanest approach and avoids rebuilding the frontend.</strong></div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ──────────────────── SECTION 4: DOMAIN MODEL ──────────────────── -->
+  <div class="section">
+    <h2><span class="number-circle">4</span> Complete Domain Model</h2>
+
+    <h3>Core entities (must build)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Entity</th><th>Purpose</th><th>Key columns</th><th>Tenant-scoped?</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>companies</strong></td>
+            <td>Root tenant — everything belongs to a company</td>
+            <td>id, name, email, phone, industry, active, created_at</td>
+            <td><span class="tag blue">Global</span></td>
+          </tr>
+          <tr>
+            <td><strong>users</strong></td>
+            <td>System users with role + company binding</td>
+            <td>id, company_id, email, password_hash, full_name, role, active, last_login</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td><strong>warehouses</strong></td>
+            <td>Physical warehouse building</td>
+            <td>id, company_id, name, address, city, manager_name, active</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td><strong>location_nodes</strong></td>
+            <td>Generic location tree (Zone, Shelf, etc.)</td>
+            <td>id, company_id, warehouse_id, parent_id, node_type, name, description, capacity</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td><strong>document_types</strong></td>
+            <td>Categories (Finance, Legal, HR…)</td>
+            <td>id, company_id, name, description</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td><strong>documents</strong></td>
+            <td>Registered physical document + its location</td>
+            <td>id, company_id, document_number, title, type_id, box_location_id, custodian, pages, status, archived_date</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td><strong>search_history</strong></td>
+            <td>Log every search query per user</td>
+            <td>id, user_id, company_id, query, result_count, searched_at</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td><strong>audit_logs</strong></td>
+            <td>Immutable event trail for compliance</td>
+            <td>id, user_id, company_id, entity_type, entity_id, action, old_value, new_value, ip_address, timestamp</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+          <tr>
+            <td><strong>refresh_tokens</strong></td>
+            <td>JWT refresh token store (revocation)</td>
+            <td>id, user_id, token_hash, expires_at, revoked</td>
+            <td><span class="tag slate">Auth</span></td>
+          </tr>
+          <tr>
+            <td><strong>company_settings</strong></td>
+            <td>Per-company config (hierarchy levels, branding)</td>
+            <td>id, company_id, setting_key, setting_value</td>
+            <td><span class="tag green">Yes</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Entity relationship (simplified)</h3>
+    <div class="hierarchy">
+      <span class="root">Company</span><br>
+      &nbsp;&nbsp;├── <span class="node">Users</span> (many, role: SUPER_ADMIN | COMPANY_ADMIN | USER)<br>
+      &nbsp;&nbsp;├── <span class="node">Warehouses</span> (many)<br>
+      &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="node">LocationNodes</span> (tree, self-ref parent_id)<br>
+      &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="node">node_type: ZONE | SHELF | BOX</span><br>
+      &nbsp;&nbsp;├── <span class="node">DocumentTypes</span> (Finance, Legal, HR…)<br>
+      &nbsp;&nbsp;├── <span class="node">Documents</span> (many → box_location_id → LocationNode)<br>
+      &nbsp;&nbsp;├── <span class="node">SearchHistory</span> (per user, per company)<br>
+      &nbsp;&nbsp;├── <span class="node">AuditLogs</span> (all actions)<br>
+      &nbsp;&nbsp;└── <span class="node">CompanySettings</span> (key-value config)
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ──────────────────── SECTION 5: API SURFACE ──────────────────── -->
+  <div class="section">
+    <h2><span class="number-circle">5</span> Full API Surface</h2>
+    <p>These are all the endpoints the backend must expose to make the frontend work.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Group</th><th>Method</th><th>Path</th><th>Who can call</th></tr></thead>
+        <tbody>
+          <!-- Auth -->
+          <tr><td rowspan="5"><strong>Auth</strong></td><td>POST</td><td><code>/api/auth/login</code></td><td>Public</td></tr>
+          <tr><td>POST</td><td><code>/api/auth/logout</code></td><td>Any logged in</td></tr>
+          <tr><td>POST</td><td><code>/api/auth/refresh</code></td><td>Valid refresh token</td></tr>
+          <tr><td>GET</td><td><code>/api/auth/me</code></td><td>Any logged in</td></tr>
+          <tr><td>POST</td><td><code>/api/auth/change-password</code></td><td>Any logged in</td></tr>
+          <!-- Companies -->
+          <tr><td rowspan="4"><strong>Companies</strong></td><td>GET</td><td><code>/api/companies</code></td><td>SUPER_ADMIN</td></tr>
+          <tr><td>POST</td><td><code>/api/companies</code></td><td>SUPER_ADMIN</td></tr>
+          <tr><td>PUT</td><td><code>/api/companies/{id}</code></td><td>SUPER_ADMIN</td></tr>
+          <tr><td>DELETE</td><td><code>/api/companies/{id}</code></td><td>SUPER_ADMIN</td></tr>
+          <!-- Users -->
+          <tr><td rowspan="5"><strong>Users</strong></td><td>GET</td><td><code>/api/users</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>POST</td><td><code>/api/users</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>GET</td><td><code>/api/users/{id}</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>PUT</td><td><code>/api/users/{id}</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>DELETE</td><td><code>/api/users/{id}</code></td><td>COMPANY_ADMIN+</td></tr>
+          <!-- Warehouses -->
+          <tr><td rowspan="5"><strong>Warehouses</strong></td><td>GET</td><td><code>/api/warehouses</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>POST</td><td><code>/api/warehouses</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>GET</td><td><code>/api/warehouses/{id}</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>PUT</td><td><code>/api/warehouses/{id}</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>DELETE</td><td><code>/api/warehouses/{id}</code></td><td>COMPANY_ADMIN+</td></tr>
+          <!-- Location Nodes -->
+          <tr><td rowspan="4"><strong>Locations</strong></td><td>GET</td><td><code>/api/warehouses/{id}/locations</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>POST</td><td><code>/api/locations</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>PUT</td><td><code>/api/locations/{id}</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>DELETE</td><td><code>/api/locations/{id}</code></td><td>COMPANY_ADMIN+</td></tr>
+          <!-- Documents -->
+          <tr><td rowspan="6"><strong>Documents</strong></td><td>GET</td><td><code>/api/documents</code></td><td>Any logged in</td></tr>
+          <tr><td>POST</td><td><code>/api/documents</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>GET</td><td><code>/api/documents/{id}</code></td><td>Any logged in</td></tr>
+          <tr><td>PUT</td><td><code>/api/documents/{id}</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>DELETE</td><td><code>/api/documents/{id}</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>GET</td><td><code>/api/documents/search?q=&status=&type=</code></td><td>Any logged in</td></tr>
+          <!-- Dashboard -->
+          <tr><td rowspan="2"><strong>Dashboard</strong></td><td>GET</td><td><code>/api/dashboard/stats</code></td><td>Any logged in</td></tr>
+          <tr><td>GET</td><td><code>/api/dashboard/recent</code></td><td>Any logged in</td></tr>
+          <!-- Audit -->
+          <tr><td rowspan="2"><strong>Audit</strong></td><td>GET</td><td><code>/api/audit-logs</code></td><td>COMPANY_ADMIN+</td></tr>
+          <tr><td>GET</td><td><code>/api/search-history</code></td><td>Any logged in (own history)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ──────────────────── SECTION 6: TECH STACK ──────────────────── -->
+  <div class="section">
+    <h2><span class="number-circle">6</span> Backend Tech Stack Decision</h2>
+    <div class="card">
+      <div class="tech-row">
+        <span class="tag blue">Java 21</span>
+        <span class="tag blue">Spring Boot 3.3</span>
+        <span class="tag blue">Spring Security 6</span>
+        <span class="tag blue">Spring Data JPA</span>
+        <span class="tag green">PostgreSQL 16</span>
+        <span class="tag green">Flyway</span>
+        <span class="tag purple">JWT (jjwt 0.12)</span>
+        <span class="tag amber">Swagger / OpenAPI 3</span>
+        <span class="tag amber">MapStruct</span>
+        <span class="tag amber">Lombok</span>
+        <span class="tag slate">Docker + Docker Compose</span>
+        <span class="tag slate">Maven</span>
+      </div>
+      <p style="margin-top:0.75rem;">MapStruct handles DTO↔Entity mapping at compile time (zero reflection overhead). Flyway handles all schema migrations — never run raw SQL manually. Docker Compose will run both PostgreSQL and the Spring app locally.</p>
+    </div>
+
+    <h3>Project package structure</h3>
+    <pre><span class="c">// com.bika.archive</span>
+├── <span class="n">config</span>/          <span class="c">// SecurityConfig, JwtConfig, SwaggerConfig, CorsConfig</span>
+├── <span class="n">domain</span>/
+│   ├── <span class="n">entity</span>/      <span class="c">// JPA entities (Company, User, Document…)</span>
+│   └── <span class="n">enums</span>/       <span class="c">// Role, DocumentStatus, NodeType</span>
+├── <span class="n">dto</span>/
+│   ├── <span class="n">request</span>/     <span class="c">// LoginRequest, CreateDocumentRequest…</span>
+│   └── <span class="n">response</span>/    <span class="c">// DocumentResponse, UserResponse…</span>
+├── <span class="n">exception</span>/       <span class="c">// GlobalExceptionHandler, custom exceptions</span>
+├── <span class="n">mapper</span>/          <span class="c">// MapStruct interfaces</span>
+├── <span class="n">repository</span>/      <span class="c">// JPA repositories + custom queries</span>
+├── <span class="n">security</span>/
+│   ├── <span class="n">jwt</span>/         <span class="c">// JwtService, JwtFilter</span>
+│   └── <span class="n">tenant</span>/      <span class="c">// TenantContext, CompanyIsolationAspect</span>
+├── <span class="n">service</span>/         <span class="c">// Business logic layer</span>
+├── <span class="n">controller</span>/      <span class="c">// REST controllers (thin — delegate to service)</span>
+└── <span class="n">validation</span>/      <span class="c">// Custom validators</span></pre>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ──────────────────── SECTION 7: SPRINT ROADMAP ──────────────────── -->
+  <div class="section">
+    <h2><span class="number-circle">7</span> Implementation Roadmap</h2>
+
+    <ul class="roadmap">
+      <li>
+        <div class="sprint-label">Sprint 1</div>
+        <div>
+          <div class="sprint-title">Foundation + Auth + Company</div>
+          <div class="sprint-items">
+            <span>Spring Boot project scaffold</span> · Maven pom.xml · Docker Compose (PostgreSQL) · Flyway baseline migration · Company entity + CRUD · JWT login + logout + refresh · BCrypt password hashing · ProtectedRoute mirroring in Spring Security · Swagger UI live
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="sprint-label">Sprint 2</div>
+        <div>
+          <div class="sprint-title">User Management + Security Hardening</div>
+          <div class="sprint-items">
+            <span>User CRUD with roles</span> · Company isolation (tenant filter on every query) · RBAC with method-level @PreAuthorize · Account activation / deactivation · Change password · Profile endpoint · Audit log for auth events
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="sprint-label">Sprint 3</div>
+        <div>
+          <div class="sprint-title">Warehouse + Location Hierarchy</div>
+          <div class="sprint-items">
+            <span>Warehouse CRUD</span> · LocationNode tree (Zone → Shelf → Box) · Recursive location path resolver · Flyway migration for location tables · Full CRUD APIs wired to frontend Warehouses page
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="sprint-label">Sprint 4</div>
+        <div>
+          <div class="sprint-title">Document Management</div>
+          <div class="sprint-items">
+            <span>Document entity + CRUD</span> · DocumentType management · Document number generator (DOC-YYYY-NNNN) · Location assignment · Status workflow (Available → Checked Out → Missing) · Wire to frontend Add Document page and Detail page
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="sprint-label">Sprint 5</div>
+        <div>
+          <div class="sprint-title">Search Engine</div>
+          <div class="sprint-items">
+            <span>Full-text search</span> on document_number, title, custodian · PostgreSQL <code>ILIKE</code> + index strategy · Status filter · Company-scoped results · Search history logging · Recently accessed tracking · Dashboard stats endpoint
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="sprint-label">Sprint 6</div>
+        <div>
+          <div class="sprint-title">Frontend Integration + Testing</div>
+          <div class="sprint-items">
+            <span>Replace all localStorage calls</span> with real Axios/fetch API calls · JWT token storage + refresh interceptor · Role-based route guards in React · Integration tests for all endpoints · CORS config for React dev server
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="sprint-label">Sprint 7</div>
+        <div>
+          <div class="sprint-title">Audit Logs + Reports</div>
+          <div class="sprint-items">
+            <span>Audit log table</span> · Spring AOP aspect to auto-log entity changes · Search history API · Admin reports endpoints · Pagination + sorting on list endpoints
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="sprint-label">Sprint 8</div>
+        <div>
+          <div class="sprint-title">Hardening + Production Ready</div>
+          <div class="sprint-items">
+            <span>Rate limiting</span> · Input sanitization · Password reset flow (email token) · Refresh token rotation · Docker multi-stage build · Environment-based config (dev/prod profiles) · Final Swagger documentation
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ──────────────────── SECTION 8: WHAT TO DECIDE NEXT ──────────────────── -->
+  <div class="section">
+    <h2><span class="number-circle">8</span> Decisions to Make Before Sprint 1</h2>
+
+    <div class="decision">
+      <div class="q">1. Location hierarchy depth</div>
+      <div class="a">Stick with frontend's <strong>Warehouse → Zone → Shelf → Box</strong> and map it to a flexible LocationNode tree? Or rebuild the frontend to match the full <strong>Building → Floor → Room → Rack</strong> hierarchy? <strong>Recommended: keep frontend as-is, use flexible tree backend.</strong></div>
+    </div>
+    <div class="decision">
+      <div class="q">2. Multi-tenancy strategy</div>
+      <div class="a">Schema-per-tenant (separate PostgreSQL schemas per company) vs. row-level security (shared tables, company_id filter)? <strong>Recommended: row-level with company_id on every tenant-scoped table — simpler to deploy, easier to migrate.</strong></div>
+    </div>
+    <div class="decision">
+      <div class="q">3. Search strategy</div>
+      <div class="a">Simple ILIKE queries vs. PostgreSQL full-text search (<code>to_tsvector</code>) vs. Elasticsearch? <strong>Recommended: start with PostgreSQL full-text search (built-in, no extra infrastructure). Add Elasticsearch only if performance demands it later.</strong></div>
+    </div>
+    <div class="decision">
+      <div class="q">4. Token storage on frontend</div>
+      <div class="a">Store JWT access token in memory (most secure) + refresh token in httpOnly cookie? Or both in localStorage (simpler but XSS risk)? <strong>Recommended: access token in memory + refresh token in httpOnly cookie.</strong></div>
+    </div>
+    <div class="decision">
+      <div class="q">5. Email service for password reset</div>
+      <div class="a">Need SMTP for Sprint 8 password reset flow. Plan to use SendGrid, Mailgun, or local MailHog for dev? Decide early so config is ready.</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ──────────────────── SECTION 9: START HERE ──────────────────── -->
+  <div class="section">
+    <h2><span class="number-circle">9</span> Where to Start</h2>
+    <div class="callout good">
+      <strong>Sprint 1 first commit should produce:</strong> A running Spring Boot app → Docker Compose spins up PostgreSQL → Flyway creates the companies + users tables → <code>POST /api/auth/login</code> returns a real JWT → Swagger UI is live at <code>/swagger-ui.html</code>. Everything after Sprint 1 builds on this foundation.
+    </div>
+    <div class="callout info">
+      <strong>Frontend integration tip:</strong> In parallel with Sprint 1, create an <code>api.js</code> service in the frontend with Axios, add a JWT interceptor, and replace the mock auth context with real login — this unblocks testing the two sides together from day one.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

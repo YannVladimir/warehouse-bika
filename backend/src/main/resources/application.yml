@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: bika-archive
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5442}/${DB_NAME:bika_archive}
+    username: ${DB_USER:bika}
+    password: ${DB_PASSWORD:bika_dev_password}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: ${SERVER_PORT:8090}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:this-is-a-dev-only-secret-key-change-in-production-min-32-bytes}
+    access-token-expiration-minutes: ${JWT_ACCESS_EXPIRATION_MINUTES:15}
+    refresh-token-expiration-days: ${JWT_REFRESH_EXPIRATION_DAYS:7}
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+    same-site: ${COOKIE_SAME_SITE:Lax}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:*}
+  bootstrap-admin:
+    email: ${BOOTSTRAP_ADMIN_EMAIL:admin@bika.local}
+    password: ${BOOTSTRAP_ADMIN_PASSWORD:ChangeMe123!}
+    full-name: ${BOOTSTRAP_ADMIN_NAME:System Administrator}
+  mail:
+    from: ${MAIL_FROM:no-reply@bika-archive.local}
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:5180}
+  handoff:
+    secret: ${ARCHIVE_HANDOFF_SECRET:}
+  integration:
+    bika-source:
+      base-url: ${BIKA_SOURCE_BASE_URL:http://localhost:8081/api}
+      api-key: ${BIKA_SOURCE_API_KEY:}
+      enabled: ${BIKA_SOURCE_SYNC_ENABLED:false}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    com.bika.archive: ${LOG_LEVEL:INFO}

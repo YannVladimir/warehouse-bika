@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bika-archive-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-bika_archive}
+      POSTGRES_USER: ${DB_USER:-bika}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bika_dev_password}
+    ports:
+      - "${DB_PORT:-5442}:5432"
+    volumes:
+      - bika_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-bika} -d ${DB_NAME:-bika_archive}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Optional: the packaged app itself. Local dev typically runs `mvn spring-boot:run` directly
+  # instead (faster feedback loop) -- this service is for testing the production Docker image or
+  # for an actual deployment, not required for day-to-day development.
+  app:
+    build: .
+    container_name: bika-archive-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-bika_archive}
+      DB_USER: ${DB_USER:-bika}
+      DB_PASSWORD: ${DB_PASSWORD:-bika_dev_password}
+      SERVER_PORT: 8090
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRATION_MINUTES: ${JWT_ACCESS_EXPIRATION_MINUTES:-15}
+      JWT_REFRESH_EXPIRATION_DAYS: ${JWT_REFRESH_EXPIRATION_DAYS:-7}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      COOKIE_SAME_SITE: ${COOKIE_SAME_SITE:-Lax}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:*}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@bika.local}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-ChangeMe123!}
+      BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-System Administrator}
+      MAIL_HOST: ${MAIL_HOST:-localhost}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-no-reply@bika-archive.local}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5180}
+      ARCHIVE_HANDOFF_SECRET: ${ARCHIVE_HANDOFF_SECRET:-}
+      BIKA_SOURCE_BASE_URL: ${BIKA_SOURCE_BASE_URL:-http://localhost:8081/api}
+      BIKA_SOURCE_API_KEY: ${BIKA_SOURCE_API_KEY:-}
+      BIKA_SOURCE_SYNC_ENABLED: ${BIKA_SOURCE_SYNC_ENABLED:-false}
+    ports:
+      - "${SERVER_PORT:-8090}:8090"
+
+volumes:
+  bika_postgres_data:
