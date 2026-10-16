@@ -98,7 +98,7 @@ Open the URL Vite prints (usually http://localhost:5173). The dev server proxies
 
 All settings are environment variables with dev-friendly defaults (see `backend/src/main/resources/application.yml`). `backend/.env.example` documents every variable. Copy it to `backend/.env` for docker-compose. Spring Boot itself reads only real environment variables, not the `.env` file.
 
-> **Ports:** the built-in defaults are DB `5442` and API `8090`. `.env.example` lists `5432`/`8080`. If you use a `.env`, keep `DB_PORT`/`SERVER_PORT` consistent between docker-compose and the backend.
+> **Ports:** DB `5442` and API `8090` everywhere (defaults and `.env.example`). If you change `DB_PORT`/`SERVER_PORT` in `.env`, export the same values for the backend too, since it doesn't read `.env`.
 
 | Variable | Purpose |
 |---|---|
