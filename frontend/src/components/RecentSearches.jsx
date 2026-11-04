@@ -1,4 +1,3 @@
-import React from 'react';
 import { Clock } from 'lucide-react';
 import { useDocuments } from '../context/DocumentContext';
 import { useNavigate } from 'react-router-dom';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { auditLogApi, searchHistoryApi } from '../services/documentApi';
 import { ClipboardList, Search, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 

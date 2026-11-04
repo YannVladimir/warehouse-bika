@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { companyApi } from '../services/adminApi';
 import { extractErrorMessage } from '../services/api';
-import { Building2, Plus, X, User, Mail, Phone, Calendar, AlertCircle } from 'lucide-react';
+import { Building2, Plus, X, Mail, Phone, Calendar, AlertCircle } from 'lucide-react';
 
 const inputClass = "w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 dark:focus:ring-blue-500/10 transition-all";
 

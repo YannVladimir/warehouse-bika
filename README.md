@@ -162,3 +162,28 @@ npm run build    # static files in frontend/dist
 ```
 
 Serve `dist/` from any static host, and route `/api` to the backend.
+
+## Tests
+
+```bash
+cd backend && mvn test     # 14 tests
+cd frontend && npm test    # 7 tests
+```
+
+No tests existed before this pass. Added:
+
+- **Backend**: `LocationNodeServiceTest` (10 tests) covering the multi-tenant isolation rules (cross-company lookups 404 rather than confirm existence, shared-warehouse nodes are only writable by a super admin), the hierarchy validation in `create()` (rejects a parent from a different warehouse, rejects nesting under a storage unit), breadcrumb path resolution, and tree building. `RateLimitServiceTest` (4 tests) covering the brute-force login/password-reset rate limiter, including that independent keys (different emails/IPs) don't interfere with each other and that the window actually resets.
+
+  **Gotcha found**: this project's Surefire setup silently reports "Tests run: 0" for any JUnit 5 test class using `@Nested` inner classes — confirmed with a minimal reproduction, not specific to these tests. Both test classes use flat, descriptively-prefixed method names instead (e.g. `tenantIsolation_...`, `create_...`) to work around it.
+
+- **Frontend**: `documentDisplay.test.js` (7 tests) for the status-badge mapping and relative-time formatting helpers. Note: `statusMeta()` silently falls back to the `AVAILABLE` badge for an unrecognized or missing status rather than showing an "unknown" state — documented as current behavior in the test, not changed, since it's a UX judgment call rather than a clear bug.
+
+`npm run lint` was also previously broken by ~30 stale `import React from 'react'` statements (unnecessary since the new JSX transform) and a couple of genuinely unused imports — fixed. A newer lint rule (`react-hooks/set-state-in-effect`) flagged a data-loading-on-mount pattern used in six places (`DetailsPage`, `ReportsPage` x2, `SearchPage`, `LocationPicker`, `HandoffPage`); left as a warning rather than rewritten, since fixing it properly (e.g. moving to a data-fetching library) touches live API calls that weren't safe to change without a backend running to verify against.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs the backend tests (JDK 21 + Maven) and the frontend lint + tests + build (Node + npm) on every push.
+
+## License
+
+Proprietary — Bika Archive integrates with Bika DMS, a commercial product for C-Note Ltd, not an open-source project.

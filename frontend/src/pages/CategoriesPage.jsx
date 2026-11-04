@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { documentTypeApi } from '../services/documentApi';
 import { companyApi } from '../services/adminApi';
 import { extractErrorMessage } from '../services/api';
