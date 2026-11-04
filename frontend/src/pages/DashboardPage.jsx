@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { useDocuments } from '../context/DocumentContext';
 import { useAuth } from '../context/AuthContext';

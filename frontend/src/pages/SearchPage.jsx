@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDocuments } from '../context/DocumentContext';
 import { DocumentCard } from '../components/DocumentCard';
 import { RecentSearches } from '../components/RecentSearches';
@@ -16,7 +16,6 @@ export const SearchPage = () => {
     statusFilter,
     search,
     goToSearchPage,
-    setSearchQuery,
     setStatusFilter
   } = useDocuments();
 

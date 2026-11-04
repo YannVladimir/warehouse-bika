@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { warehouseApi, locationApi } from '../services/adminApi';
 import { extractErrorMessage } from '../services/api';
 import { useAuth } from '../context/AuthContext';
